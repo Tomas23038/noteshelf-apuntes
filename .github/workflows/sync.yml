@@ -1,0 +1,39 @@
+name: Sincronizar apuntes
+
+on:
+  schedule:
+    # cada hora entre las 11:23 y las 04:23 UTC
+    - cron: "23 11-23 * * *"
+    - cron: "23 0-4 * * *"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Reconvertir todos los cuadernos"
+        type: boolean
+        default: false
+
+concurrency:
+  group: sync-apuntes
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Convertir .nsa nuevos o modificados
+        run: python sync_drive.py
+        env:
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+          SOURCE_FOLDER_ID: ${{ vars.SOURCE_FOLDER_ID }}
+          OUTPUT_FOLDER_NAME: ${{ vars.OUTPUT_FOLDER_NAME }}
+          NSA_TZ: ${{ vars.NSA_TZ }}
+          FORCE: ${{ inputs.force }}

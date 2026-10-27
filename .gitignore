@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+*.nsa
+nsa_out/
+.env
